@@ -28,7 +28,7 @@ def create_table(conn):
         print(e)
 
 
-def insert_data(conn, data):
+def insert_data(conn, date, ip, scan_type, port_range, result):
     try:
         # Insert the data into the table
         sql = '''
@@ -36,7 +36,8 @@ def insert_data(conn, data):
         VALUES (?,?,?,?,?)
         '''
         cur = conn.cursor()
-        cur.execute(sql, data)
+        data_for_db = date, ip, scan_type, port_range, result
+        cur.execute(sql, data_for_db)
         conn.commit()
         return cur.lastrowid
     except sqlite3.Error as e:
