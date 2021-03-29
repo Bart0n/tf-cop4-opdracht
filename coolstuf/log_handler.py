@@ -3,14 +3,8 @@ from datetime import date
 
 
 def json_output(js_date, js_ip, js_type, js_ports, js_timeout, js_results, js_location):
-    data = {}
-
-    data['date'] = js_date
-    data['ip'] = js_ip
-    data['type'] = js_type
-    data['ports'] = js_ports
-    data['timeout'] = js_timeout
-    data['results'] = js_results
+    data = {'date': js_date, 'ip': js_ip, 'type': js_type, 'ports': js_ports, 'timeout': js_timeout,
+            'results': js_results}
 
     with open(js_location, 'a') as outfile:
         json.dump(data, outfile, indent=2)
