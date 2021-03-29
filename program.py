@@ -45,6 +45,8 @@ print(f'[+] Scan started \n')
 
 if args.t == 'tcp-connect':
     tcp_connect.tcp_connect_scan(args.i, args.l, dst_port, args.to, args.v, args.sc, db)
+    schijft naar db
+    schrijf naar xml
 elif args.t == 'tcp-syn':
     print("TCP-Syn Scan")
 elif args.t == 'udp':
