@@ -1,26 +1,24 @@
 from scapy.all import *
 
 
-def tcp_connect_scan(f_dst_ip, f_port, f_timeout, f_verbose, f_show_closed):
+# Function returns 3 values. [0] is a nice formatted value for the CLI / Logging (result). [1] (port_state) can be
+# used inside the program, a value of 0 means port closed, 1 means port open. [2] is what port number is scanned
+def tcp_connect_scan(f_dst_ip, f_port, f_timeout, f_verbose):
     f_src_port = RandShort()
-    f_tcp_connect_scan = sr1(IP(dst=f_dst_ip) / TCP(sport=f_src_port,
-                                                    dport=f_port, flags="S"), timeout=f_timeout, verbose=f_verbose)
+    f_tcp_connect_scan = sr1(IP(dst=f_dst_ip) / TCP(sport=f_src_port, dport=f_port, flags="S"), timeout=f_timeout, verbose=f_verbose)
     if str(type(f_tcp_connect_scan)) == "<class 'NoneType'>":
         result = f'[-] Port {f_port} closed'
-        if f_show_closed:
-            print(result)
-        return result
+        port_state = 0
+        return result, port_state, f_port
     elif f_tcp_connect_scan.haslayer(TCP):
         if f_tcp_connect_scan.getlayer(TCP).flags == 0x12:
-            f_send_reset = sr(IP(dst=f_dst_ip) / TCP(sport=f_src_port,
-                                                     dport=f_port, flags="RA"), timeout=f_timeout, verbose=f_verbose)
+            f_send_reset = sr(IP(dst=f_dst_ip) / TCP(sport=f_src_port, dport=f_port, flags="RA"), timeout=f_timeout, verbose=f_verbose)
             result = f'[+] Port {f_port} open'
-            print(result)
-            return result
+            port_state = 1
+            return result, port_state, f_port
         elif tcp_connect_scan.getlayer(TCP).flags == 0x14:
             result = f'[-] Port {f_port} closed'
-            if f_show_closed:
-                print(result)
-            return result
+            port_state = 0
+            return result, port_state, f_port
     else:
-        print(f'Something went completely wrong')
+        return f'Something went completely wrong'

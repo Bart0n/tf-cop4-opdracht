@@ -1,15 +1,22 @@
 import argparse
 import datetime
+import concurrent.futures
+import time
 from coolstuf import checkvalidip
 from coolstuf import banner
 from coolstuf import tcp_connect
 from coolstuf import ports
 from coolstuf import database
 from coolstuf import log_handler
+from coolstuf import color as c
+
 
 # Set date
 date = datetime.datetime.now()
 date = date.strftime("%Y-%m-%d %H:%M:%S")
+
+# Set start time, so we can show off with our ultra fast scanner
+start_time = time.time()
 
 parser = argparse.ArgumentParser(description=banner.banner())
 # Get arguments for the program
@@ -21,36 +28,66 @@ parser.add_argument('-sc', action='store_true', help='Show closed ports')
 parser.add_argument('-v', metavar='verbose', required=False, default=0, type=int, choices=range(0, 4), help='Level of verbosity, from 0 (almost mute) to 3 (verbose)')
 parser.add_argument('-l', metavar=('log', 'location'), required=False, nargs=2, default='none', help="Do you want to log? Ex: '-l xml cop4.xml' or '-l json cop4.json'")
 parser.add_argument('-rd', action='store_true', help='Remove database')
-args = parser.parse_args()
+cli_input = parser.parse_args()
 
 # Check for valid IPv4 Address
-if not checkvalidip.check_ip(args.i):
+if not checkvalidip.check_ip(cli_input.i):
     exit()
 
 # Format the ports
-dst_port = ports.port_format(args.p)
+dst_ports = ports.port_format(cli_input.p)
 
 # Database init
 database_file = "database.sqlite3"
-if args.rd:
+if cli_input.rd:  # If the database remove flag has been set, delete the database
     database.delete_db(database_file)
 db = database.create_connection(database_file)
 database.create_table(db)
 
-print(f'[+] Target: {args.i}')
-print(f'[+] Scan started \n')
+print(f'[i] Target: {c.C.ITALIC}{cli_input.i}{c.C.END}')
+print(f'[i] Scan started type: {c.C.ITALIC}{cli_input.t.upper()}{c.C.END} \n')
 
-if args.t == 'tcp-connect':
-    all_result = []
-    for i in dst_port:
-        fun_tcp_con_single_port = tcp_connect.tcp_connect_scan(args.i, i, args.to, args.v, args.sc)
-        all_result += [fun_tcp_con_single_port]
-    database.insert_data(db, date, str(args.i), str(args.t), str(dst_port), str(all_result))
-    log_handler.write_output(date, args.i, args.t, dst_port, args.to, all_result, args.l[1], args.l[0])
-
-elif args.t == 'tcp-syn':
+all_result = []
+open_ports = []
+closed_ports = []
+if cli_input.t == 'tcp-connect':
+    # tcp_connect.tcp_connect_scan returns 3 values
+    # Lets do some threading :)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = [executor.submit(tcp_connect.tcp_connect_scan, cli_input.i, dst_port, cli_input.to, cli_input.v) for dst_port in dst_ports]
+        # Don't use 'concurrent.futures.wait(future)', otherwise you don't see scan output on the fly.
+        for results in future:
+            tcp_con_single_port = results.result()
+            # If port is closed (state 0) and -sc is been given, print it.
+            if tcp_con_single_port[1] == 0 and cli_input.sc:
+                print(c.C.RED, tcp_con_single_port[0])
+            # If port is open (state 1), print it (always):
+            elif tcp_con_single_port[1] == 1:
+                print(c.C.YELLOW, tcp_con_single_port[0])
+            # Grab all the results, and put it in.... all_result
+            all_result += [tcp_con_single_port]
+elif cli_input.t == 'tcp-syn':
     print("TCP-Syn Scan")
-elif args.t == 'udp':
+elif cli_input.t == 'udp':
     print("UDP Scan")
-elif args.t == 'xmas':
+elif cli_input.t == 'xmas':
     print("XMAS Scan")
+
+# Quick for loop to divide the open and closed port for logging
+for x in all_result:
+    # Port Open
+    if x[1] == 1:
+        open_ports += [x[2]]
+    # Port Closed
+    if x[1] == 0:
+        closed_ports += [x[2]]
+
+# A nice sum at the end of the scan
+#%.2f'
+print(f"\n{c.C.YELLOW}[✓]{c.C.END} {c.C.BOLD}COP-Scan{c.C.END} finished in {round(time.time() - start_time,2)} seconds."
+      f"\n{c.C.YELLOW}[✓]{c.C.END} Scanned {c.C.UNDERLINE}{c.C.GREEN}{len(dst_ports)}{c.C.END} port(s). {c.C.YELLOW}{len(open_ports)} ports open, {c.C.RED}{len(closed_ports)} closed.{c.C.END}")
+
+# Put data is database
+database.insert_data(db, date, str(cli_input.i), str(cli_input.t), str(cli_input.p), str(open_ports), str(closed_ports))
+# Parse it to the log handler
+log_handler.write_output(date, cli_input.i, cli_input.t, cli_input.p, cli_input.to, open_ports, closed_ports, cli_input.l[1], cli_input.l[0])

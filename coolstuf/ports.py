@@ -1,3 +1,6 @@
+from coolstuf import color as c
+
+
 def port_format(port):
     dst_port = []
     port = port.lower()
@@ -5,6 +8,7 @@ def port_format(port):
     if not contain_letters:
         if "-" in port:
             pl = port.split("-")
+            pl = [int(x) for x in pl]
             pl.sort()
             pl_low = int(pl[0])
             pl_high = int(pl[1]) + 1
@@ -20,10 +24,10 @@ def port_format(port):
             return dst_port
 
         elif port.isdigit():
-            dst_port += [port]
+            dst_port += [int(port)]
             return dst_port
     else:
-        print(f"Please enter a valid port number. '-p {port}' is not valid.\n"
+        print(f"{c.C.RED}[✖]{c.C.END} Please enter a valid port number. '-p {port}' is not valid.\n"
               f'Examples:\n'
               f"'-p 80' scan port 80.\n"
               f"'-p 22-30' scan port range 22 to 30\n"

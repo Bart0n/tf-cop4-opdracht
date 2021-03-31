@@ -8,6 +8,7 @@ def create_connection(db_file):
         conn = sqlite3.connect(db_file)
         return conn
     except sqlite3.Error as e:
+        print("DB Error - Create Connection")
         print(e)
     return conn
 
@@ -21,26 +22,29 @@ def create_table(conn):
                                             ip text,
                                             type text,
                                             port_range text,
-                                            result text
+                                            open_port text,
+                                            closed_port text
                                         ); """
         conn.execute(create_table_scanner)
     except sqlite3.Error as e:
+        print("DB Error - Create Table")
         print(e)
 
 
-def insert_data(conn, date, ip, scan_type, port_range, result):
+def insert_data(conn, date, ip, scan_type, port_range, open_port, closed_port):
     try:
         # Insert the data into the table
         sql = '''
-        INSERT INTO scanner(date, ip, type, port_range, result)
-        VALUES (?,?,?,?,?)
+        INSERT INTO scanner(date, ip, type, port_range, open_port, closed_port)
+        VALUES (?,?,?,?,?,?)
         '''
         cur = conn.cursor()
-        data_for_db = date, ip, scan_type, port_range, result
+        data_for_db = date, ip, scan_type, port_range, open_port, closed_port
         cur.execute(sql, data_for_db)
         conn.commit()
         return cur.lastrowid
     except sqlite3.Error as e:
+        print("DB Error - Insert Data")
         print(e)
 
 
