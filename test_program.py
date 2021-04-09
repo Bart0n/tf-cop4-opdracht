@@ -1,0 +1,115 @@
+import unittest
+import os
+from coolstuf import checkvalidip
+from coolstuf import ports
+from coolstuf import log_handler
+from coolstuf import database
+from coolstuf import tcp_connect
+from coolstuf import tcp_syn
+from coolstuf import udp
+from coolstuf import banner
+
+
+# Call test_progam.py --buffer to suppress the print statements!
+class Tests(unittest.TestCase):
+    def test_checkvalidip(self):
+        """Checks IP address. Any valid IP returns a True, any non-valid returns a False."""
+        # [0] Returns False or True, [1] Returns the error in case of a non-valid IP
+        self.assertEqual(
+            checkvalidip.check_ip("192.168.1.1")[0],
+            True
+        )
+        self.assertEqual(
+            checkvalidip.check_ip("192.168.0.a")[0],
+            False
+        )
+
+    def test_ports(self):
+        """Checks different port ranges, single port, some random ports and a range of ports,
+        these should return a nice formatted list of the ports. Any non-valid ports should return a false."""
+        self.assertEqual(
+            ports.port_format("80-90"),
+            [80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90]
+        )
+        self.assertEqual(
+            ports.port_format("22,23,25,27"),
+            [22, 23, 25, 27]
+        )
+        self.assertEqual(
+            ports.port_format("8080"),
+            [8080]
+        )
+        self.assertFalse(
+            ports.port_format("asdf-80")[0],
+        )
+
+    def test_writeoutput(self):
+        """"Writes output to test.json and test.xml, that should return a True.
+        Any non-valid input should return false"""
+        # cse = Checked Somewhere Else :)
+        self.assertTrue(
+            log_handler.write_output("cse", "cse", "cse", "cse", "cse", "cse", "cse", "test_program.json", "json")[0],
+        )
+        self.assertTrue(
+            log_handler.write_output("cse", "cse", "cse", "cse", "cse", "cse", "cse", "test_program.xml", "xml"[0]),
+        )
+        self.assertFalse(
+            log_handler.write_output("cse", "cse", "cse", "cse", "cse", "cse", "cse", "fake insert", "crazy output")[0],
+        )
+
+    def test_database(self):
+        """"Checks if the database file is created"""
+        db = database.create_connection("test_program.sqlite3")
+        self.assertIsNotNone(
+            db
+        )
+
+    def test_banner(self):
+        """"This should generate the awesome TF-COP4 banner"""
+        self.assertIsNotNone(banner.banner())
+
+    def test_scans(self):
+        """"Checks the different port scanners. It checks for port 1 on the localhost (127.0.0.1) with
+        the assumption that it is closed. Second check is port 53 on Google DNS, if there is no internet, this
+        test will fail!
+        """
+        # TCP Connect Scan
+        self.assertEqual(
+            tcp_connect.tcp_connect_scan("127.0.0.1", [1], 1, 0),
+            ('[-] Port [1] closed', 0, [1])
+        )
+        self.assertEqual(
+            tcp_connect.tcp_connect_scan("8.8.8.8", [53], 1, 0),
+            ('[+] Port [53] open', 1, [53])
+        )
+
+        # TCP SYN Scan
+        self.assertEqual(
+            tcp_syn.tcp_syn_scan("127.0.0.1", [1], 1, 0),
+            ('[-] Port [1] closed', 0, [1])
+        )
+        self.assertEqual(
+            tcp_syn.tcp_syn_scan("8.8.8.8", [53], 1, 0),
+            ('[+] Port [53] open', 1, [53])
+        )
+
+        # UDP Scan
+        self.assertEqual(
+            udp.udp_scan("127.0.0.1", [1], 1, 0),
+            ('[-] Port [1] closed', 0, [1])
+        )
+        self.assertEqual(
+            udp.udp_scan("8.8.8.8", [53], 1, 0),
+            ('[+] Port [53] open or filtered', 1, [53])
+        )
+
+    def tearDown(self):
+        """Removes the test JSON, XML and Database files that were created during testing"""
+        files = ["test_program.json", "test_program.xml", "test_program.sqlite3"]
+        for f in files:
+            if os.path.isfile(f):
+                os.remove(f)
+
+
+if __name__ == '__main__':
+    unittest.main()

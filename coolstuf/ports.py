@@ -27,9 +27,8 @@ def port_format(port):
             dst_port += [int(port)]
             return dst_port
     else:
-        print(f"{c.C.RED}[✖]{c.C.END} Please enter a valid port number. '-p {port}' is not valid.\n"
-              f'Examples:\n'
-              f"'-p 80' scan port 80.\n"
-              f"'-p 22-30' scan port range 22 to 30\n"
-              f"'-p 80,443' scan port 80 and 443\n")
-        exit()
+        return False, (f"{c.C.RED}[✖]{c.C.END} Please enter a valid port number. '-p {port}' is not valid.\n"
+                       f'Examples:\n'
+                       f"'-p 80' scan port 80.\n"
+                       f"'-p 22-30' scan port range 22 to 30\n"
+                       f"'-p 80,443' scan port 80 and 443\n")

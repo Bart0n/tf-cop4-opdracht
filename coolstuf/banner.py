@@ -17,5 +17,5 @@ def banner():
 by Bart
 Github  : https://github.com/Bart0n/tf-cop4-opdracht
 """
-    print(bannerText)
+    return bannerText
 

@@ -5,6 +5,8 @@ import time
 from coolstuf import checkvalidip
 from coolstuf import banner
 from coolstuf import tcp_connect
+from coolstuf import tcp_syn
+from coolstuf import udp
 from coolstuf import ports
 from coolstuf import database
 from coolstuf import log_handler
@@ -18,7 +20,8 @@ date = date.strftime("%Y-%m-%d %H:%M:%S")
 # Set start time, so we can show off with our ultra fast scanner
 start_time = time.time()
 
-parser = argparse.ArgumentParser(description=banner.banner())
+# A good program, needs a good banner
+parser = argparse.ArgumentParser(description=print(banner.banner()))
 # Get arguments for the program
 parser.add_argument('-i', metavar='ip', required=True, help='The IP address to scan')
 parser.add_argument('-t', metavar='type', required=True, choices={'tcp-connect', 'tcp-syn', 'udp', 'xmas'}, help="What kind of scan? Ex: '-t tcp-connect', '-t tcp-syn', '-t udp' or '-t xmas'")
@@ -31,11 +34,14 @@ parser.add_argument('-rd', action='store_true', help='Remove database')
 cli_input = parser.parse_args()
 
 # Check for valid IPv4 Address
-if not checkvalidip.check_ip(cli_input.i):
+if not checkvalidip.check_ip(cli_input.i)[0]:
+    print(checkvalidip.check_ip(cli_input.i)[1])
     exit()
 
 # Format the ports
 dst_ports = ports.port_format(cli_input.p)
+if not dst_ports:
+    exit()
 
 # Database init
 database_file = "database.sqlite3"
@@ -66,10 +72,41 @@ if cli_input.t == 'tcp-connect':
                 print(c.C.YELLOW, tcp_con_single_port[0])
             # Grab all the results, and put it in.... all_result
             all_result += [tcp_con_single_port]
+
 elif cli_input.t == 'tcp-syn':
-    print("TCP-Syn Scan")
+    # tcp.syn.tcp_syn_scan returns 3 values
+    # Lets do some threading :)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = [executor.submit(tcp_syn.tcp_syn_scan, cli_input.i, dst_port, cli_input.to, cli_input.v) for dst_port in dst_ports]
+        # Don't use 'concurrent.futures.wait(future)', otherwise you don't see scan output on the fly.
+        for results in future:
+            tcp_syn_single_port = results.result()
+            # If port is closed (state 0) and -sc is been given, print it.
+            if tcp_syn_single_port[1] == 0 and cli_input.sc:
+                print(c.C.RED, tcp_syn_single_port[0])
+            # If port is open (state 1), print it (always):
+            elif tcp_syn_single_port[1] == 1:
+                print(c.C.YELLOW, tcp_syn_single_port[0])
+            # Grab all the results, and put it in.... all_result
+            all_result += [tcp_syn_single_port]
+
 elif cli_input.t == 'udp':
-    print("UDP Scan")
+    # tcp.syn.tcp_syn_scan returns 3 values
+    # Lets do some threading :)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = [executor.submit(udp.udp_scan, cli_input.i, dst_port, cli_input.to, cli_input.v) for dst_port in dst_ports]
+        # Don't use 'concurrent.futures.wait(future)', otherwise you don't see scan output on the fly.
+        for results in future:
+            udp_single_port = results.result()
+            # If port is closed (state 0) and -sc is been given, print it.
+            if udp_single_port[1] == 0 and cli_input.sc:
+                print(c.C.RED, udp_single_port[0])
+            # If port is open (state 1), print it (always):
+            elif udp_single_port[1] == 1:
+                print(c.C.YELLOW, udp_single_port[0])
+            # Grab all the results, and put it in.... all_result
+            all_result += [udp_single_port]
+
 elif cli_input.t == 'xmas':
     print("XMAS Scan")
 
@@ -83,11 +120,12 @@ for x in all_result:
         closed_ports += [x[2]]
 
 # A nice sum at the end of the scan
-#%.2f'
 print(f"\n{c.C.YELLOW}[✓]{c.C.END} {c.C.BOLD}COP-Scan{c.C.END} finished in {round(time.time() - start_time,2)} seconds."
       f"\n{c.C.YELLOW}[✓]{c.C.END} Scanned {c.C.UNDERLINE}{c.C.GREEN}{len(dst_ports)}{c.C.END} port(s). {c.C.YELLOW}{len(open_ports)} ports open, {c.C.RED}{len(closed_ports)} closed.{c.C.END}")
 
 # Put data is database
-database.insert_data(db, date, str(cli_input.i), str(cli_input.t), str(cli_input.p), str(open_ports), str(closed_ports))
+database_row = database.insert_data(db, date, str(cli_input.i), str(cli_input.t), str(cli_input.p), str(open_ports), str(closed_ports))
+print(f"{c.C.YELLOW}[✓]{c.C.END} Saved to database row: {database_row}")
 # Parse it to the log handler
-log_handler.write_output(date, cli_input.i, cli_input.t, cli_input.p, cli_input.to, open_ports, closed_ports, cli_input.l[1], cli_input.l[0])
+logging_result = log_handler.write_output(date, cli_input.i, cli_input.t, cli_input.p, cli_input.to, open_ports, closed_ports, cli_input.l[1], cli_input.l[0])
+print(logging_result[1])

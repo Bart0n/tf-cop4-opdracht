@@ -1,5 +1,6 @@
 import sqlite3
 import os
+from coolstuf import color as c
 
 
 def create_connection(db_file):
@@ -53,9 +54,10 @@ def delete_db(database_file):
     if os.path.exists(database_file):
         try:
             os.remove(database_file)
+            print(f"\n{c.C.YELLOW}[✓]{c.C.END} Database removed!\n")
         except:
-            print("Cannot delete database file, maybe it is in use?")
+            print(f"\n{c.C.RED}[✖]{c.C.END} Cannot delete database file, maybe it is in use?")
             exit()
     else:
-        print("Requested to delete the database, but database does not exist yet.")
+        print(f"\n{c.C.RED}[✖]{c.C.END} Requested to delete the database, but database does not exist yet.")
         exit()

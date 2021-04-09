@@ -1,31 +1,33 @@
-# tf-cop4-opdracht
-████████╗███████╗     ██████╗ ██████╗ ██████╗ ██╗  ██╗
-╚══██╔══╝██╔════╝    ██╔════╝██╔═══██╗██╔══██╗██║  ██║
-   ██║   █████╗█████╗██║     ██║   ██║██████╔╝███████║
-   ██║   ██╔══╝╚════╝██║     ██║   ██║██╔═══╝ ╚════██║
-   ██║   ██║         ╚██████╗╚██████╔╝██║          ██║
-   ╚═╝   ╚═╝          ╚═════╝ ╚═════╝ ╚═╝          ╚═╝
+# TF-COP4.0 Port-Scan!
 
-██████╗  ██████╗ ██████╗ ████████╗   ███████╗ ██████╗ █████╗ ███╗   ██╗
-██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝   ██╔════╝██╔════╝██╔══██╗████╗  ██║
-██████╔╝██║   ██║██████╔╝   ██║█████╗███████╗██║     ███████║██╔██╗ ██║
-██╔═══╝ ██║   ██║██╔══██╗   ██║╚════╝╚════██║██║     ██╔══██║██║╚██╗██║
-██║     ╚██████╔╝██║  ██║   ██║      ███████║╚██████╗██║  ██║██║ ╚████║
-╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝      ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝
+When used properly, TF-COP4.0 Port-Scan helps protect your network from invaders. But when used improperly, 
+TF-COP4.0 Port-Scan can (in rare cases) get you sued, fired, expelled, jailed, or banned by your ISP!
 
-by Bart
-Github  : https://github.com/Bart0n/tf-cop4-opdracht
+## Usage:
+To run the program, simple use:`program.py -h`for help output.
 
-usage: program.py [-h] -i ip -t type [-l log] -p port [-to timeout] [-v verbose]
+This program has the following statements:
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -i ip, --ip ip        The IP address to scan
-  -t type, --type type  What kind of scan?
-  -l log, --log log     Do you want to log? Default none.
-  -p port, --port port  What port number to scan?
-  -to timeout, --timeout timeout
-                        Specify a timeout, default 6.
-  -v verbose, --verbose verbose
-                        Level of verbosity, from 0 (almost mute) to 3 (verbose)
-                        
+####Required:
+
+`-i`: IP address to scan
+
+`-t`: Type of scan (tcp-connect, tcp-syn, udp, xmas)
+
+`-p`: Port to scan
+
+####Mandatory
+`-to`: Timeout in seconds
+
+`-sc`: Show closed ports
+
+`-v`: Level of verbose 
+
+`-l`: Log type and location
+
+`-rd`: Remove database
+
+####Examples
+Scan port 1 through 100, timeout of 1 second, showing closed ports and log to target.json:
+
+`program.py -i 192.168.1.1 -t tcp-connect -p 1-100 -to 1 -sc -l json target.json`
