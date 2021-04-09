@@ -8,7 +8,7 @@ To run the program, simple use:`program.py -h`for help output.
 
 This program has the following statements:
 
-###Required:
+### Required:
 
 `-i`: IP address to scan
 
@@ -16,7 +16,7 @@ This program has the following statements:
 
 `-p`: Port to scan
 
-###Mandatory
+### Mandatory
 `-to`: Timeout in seconds
 
 `-sc`: Show closed ports
@@ -27,7 +27,7 @@ This program has the following statements:
 
 `-rd`: Remove database
 
-##Examples
+## Examples
 Scan port 1 through 100, timeout of 1 second, showing closed ports and log to target.json:
 
 `program.py -i 192.168.1.1 -t tcp-connect -p 1-100 -to 1 -sc -l json target.json`
