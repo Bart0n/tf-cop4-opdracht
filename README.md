@@ -19,7 +19,7 @@ This program has the following statements:
 ### Mandatory
 `-to`: Timeout in seconds
 
-`-sc`: Show closed ports
+`-sc`: Show closed portss
 
 `-v`: Level of verbose 
 

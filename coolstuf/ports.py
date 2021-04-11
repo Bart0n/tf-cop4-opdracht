@@ -3,10 +3,10 @@ from coolstuf import color as c
 
 def port_format(port):
     dst_port = []
-    port = port.lower()
-    contain_letters = port.islower()
+    port = port.lower()  # Lower case all, if there is any character in it.
+    contain_letters = port.islower()  # Stores True of False, depending in there is a character in [port]
     if not contain_letters:
-        if "-" in port:
+        if "-" in port:  # Checks if there is a - (for range)
             pl = port.split("-")
             pl = [int(x) for x in pl]
             pl.sort()
@@ -16,14 +16,14 @@ def port_format(port):
             dst_port += pl
             return dst_port
 
-        elif "," in port:
+        elif "," in port:  # Checks if there is a , (for multi-port)
             pl = port.split(",")
             int_map = map(int, pl)
             dst_port = list(int_map)
             dst_port.sort()
             return dst_port
 
-        elif port.isdigit():
+        elif port.isdigit():  # Checks if it is a single value
             dst_port += [int(port)]
             return dst_port
     else:

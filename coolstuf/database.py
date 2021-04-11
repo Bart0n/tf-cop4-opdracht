@@ -27,6 +27,7 @@ def create_table(conn):
                                             closed_port text
                                         ); """
         conn.execute(create_table_scanner)
+        return True
     except sqlite3.Error as e:
         print("DB Error - Create Table")
         print(e)
@@ -54,10 +55,8 @@ def delete_db(database_file):
     if os.path.exists(database_file):
         try:
             os.remove(database_file)
-            print(f"\n{c.C.YELLOW}[✓]{c.C.END} Database removed!\n")
+            return True, f"\n{c.C.YELLOW}[✓]{c.C.END} Database removed!\n"
         except:
-            print(f"\n{c.C.RED}[✖]{c.C.END} Cannot delete database file, maybe it is in use?")
-            exit()
+            return False, f"\n{c.C.RED}[✖]{c.C.END} Cannot delete database file, maybe it is in use?"
     else:
-        print(f"\n{c.C.RED}[✖]{c.C.END} Requested to delete the database, but database does not exist yet.")
-        exit()
+        return False, f"\n{c.C.RED}[✖]{c.C.END} Requested to delete the database, but database does not exist yet."

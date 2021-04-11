@@ -6,6 +6,7 @@ from coolstuf import log_handler
 from coolstuf import database
 from coolstuf import tcp_connect
 from coolstuf import tcp_syn
+from coolstuf import tcp_xmas
 from coolstuf import udp
 from coolstuf import banner
 
@@ -58,20 +59,43 @@ class Tests(unittest.TestCase):
         )
 
     def test_database(self):
-        """"Checks if the database file is created"""
-        db = database.create_connection("test_program.sqlite3")
+        """"Checks database module"""
+        db = database.create_connection("test_program_write.sqlite3")
+
+        # Create database connection
         self.assertIsNotNone(
-            db
+            database.create_connection("test_program.sqlite3")
+        )
+
+        # Create database tables
+        self.assertTrue(
+            database.create_table(db)
+        )
+
+        # Insert data in database
+        self.assertIsNotNone(
+            database.insert_data(db, "01-01-1990", "8.7.6.5", "tcp-sinterklaas", "0,-1", "1", "2")
+        )
+
+        # Close the database before we can remove it
+        db.close()
+        # Remove database (should return True)
+        self.assertTrue(
+            database.delete_db("test_program_write.sqlite3")[0]
+        )
+
+        # Remove non-existing database (should return False)
+        self.assertFalse(
+            database.delete_db("fake_test_db.phplite666")[0]
         )
 
     def test_banner(self):
         """"This should generate the awesome TF-COP4 banner"""
         self.assertIsNotNone(banner.banner())
 
-    def test_scans(self):
-        """"Checks the different port scanners. It checks for port 1 on the localhost (127.0.0.1) with
-        the assumption that it is closed. Second check is port 53 on Google DNS, if there is no internet, this
-        test will fail!
+    def test_tcp_connect_scans(self):
+        """"It checks for port 1 on the localhost (127.0.0.1) with the assumption that it is closed.
+        Second and third check is port 53 and 478 on Google DNS, if there is no internet, this test will fail!
         """
         # TCP Connect Scan
         self.assertEqual(
@@ -82,7 +106,15 @@ class Tests(unittest.TestCase):
             tcp_connect.tcp_connect_scan("8.8.8.8", [53], 1, 0),
             ('[+] Port [53] open', 1, [53])
         )
+        self.assertEqual(
+            tcp_connect.tcp_connect_scan("8.8.8.8", [478], 1, 0),
+            ('[-] Port [478] closed', 0, [478])
+        )
 
+    def test_tcp_syn_scans(self):
+        """"It checks for port 1 on the localhost (127.0.0.1) with the assumption that it is closed.
+        Second and third check is port 53 and 478 on Google DNS, if there is no internet, this test will fail!
+        """
         # TCP SYN Scan
         self.assertEqual(
             tcp_syn.tcp_syn_scan("127.0.0.1", [1], 1, 0),
@@ -93,6 +125,15 @@ class Tests(unittest.TestCase):
             ('[+] Port [53] open', 1, [53])
         )
 
+        self.assertEqual(
+            tcp_syn.tcp_syn_scan("8.8.8.8", [478], 1, 0),
+            ('[-] Port [478] closed', 0, [478])
+        )
+
+    def test_udp_scans(self):
+        """"It checks for port 1 on the localhost (127.0.0.1) with the assumption that it is closed.
+        Second and third check is port 53 and 478 on Google DNS, if there is no internet, this test will fail!
+        """
         # UDP Scan
         self.assertEqual(
             udp.udp_scan("127.0.0.1", [1], 1, 0),
@@ -101,6 +142,20 @@ class Tests(unittest.TestCase):
         self.assertEqual(
             udp.udp_scan("8.8.8.8", [53], 1, 0),
             ('[+] Port [53] open or filtered', 1, [53])
+        )
+        self.assertEqual(
+            udp.udp_scan("8.8.8.8", [478], 1, 0),
+            ('[+] Port [478] open or filtered', 1, [478])
+        )
+
+    def test_xmas_scans(self):
+        """"On my tests, not many website reacted with an SYN/ACK or ICMP unreachable to the XMAS scan.
+        So we are just testing the localhost on this one.
+        """
+        # XMAS Scan
+        self.assertEqual(
+            tcp_xmas.tcp_xmas_scan("127.0.0.1", [1], 1, 0),
+            ('[-] Port [1] closed', 0, [1])
         )
 
     def tearDown(self):
